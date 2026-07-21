@@ -1,5 +1,5 @@
 # ============================================================================
-# GST Recon Pro v9.2.3 - Enterprise Multi-Strategy GST Reconciliation Engine
+# GST Recon Pro v10 - Enterprise Multi-Strategy GST Reconciliation Engine
 # ============================================================================
 # Fixed: Strict matching criteria, no false positives
 # Author: Abhishek Jakkula
