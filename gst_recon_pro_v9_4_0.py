@@ -4855,20 +4855,38 @@ def display_results(final_df: pd.DataFrame, stats: Dict):
     
     with tab_data:
         st.markdown("### 📄 Data Preview")
-        st.caption("Match status and confidence are color-coded for quick scanning. Showing first 100 rows.")
+        st.caption("Match status and confidence are visually flagged for quick scanning. Showing first 100 rows.")
         
         preview_df = final_df.head(100).copy()
-        style_cols = {}
-        if 'MATCH_STATUS' in preview_df.columns:
-            style_cols['MATCH_STATUS'] = lambda v: _status_badge_html(v)
         
-        styler = preview_df.style
+        status_icons = {
+            'Exact': '🟢 Exact',
+            'Suggested': '🔵 Suggested',
+            'Partial': '🟣 Partial',
+            'Missing in 2B': '🔴 Missing in 2B',
+            'Missing in PR': '🟠 Missing in PR',
+        }
+        column_config = {}
         if 'MATCH_STATUS' in preview_df.columns:
-            styler = styler.map(lambda v: _status_badge_html(v), subset=['MATCH_STATUS'])
+            preview_df['MATCH_STATUS'] = preview_df['MATCH_STATUS'].map(
+                lambda v: status_icons.get(v, str(v))
+            )
         if 'CONFIDENCE' in preview_df.columns:
-            styler = styler.map(_confidence_color, subset=['CONFIDENCE'])
+            column_config['CONFIDENCE'] = st.column_config.ProgressColumn(
+                "CONFIDENCE",
+                help="Match confidence score",
+                min_value=0.0,
+                max_value=1.0,
+                format="%.2f"
+            )
         
-        st.dataframe(styler, use_container_width=True, hide_index=True, height=420)
+        st.dataframe(
+            preview_df,
+            use_container_width=True,
+            hide_index=True,
+            height=420,
+            column_config=column_config
+        )
     
     with tab_export:
         st.markdown("### 💾 Export Results")
