@@ -4677,6 +4677,28 @@ def process_reconciliation(df_2b: pd.DataFrame, df_pr: pd.DataFrame, config_para
             st.exception(e)
             st.code(traceback.format_exc())
 
+def _confidence_color(value) -> str:
+    """Manual red->yellow->green gradient for confidence scores (0-1), no matplotlib needed."""
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return ''
+    v = max(0.0, min(1.0, v))
+    
+    # Two-stage interpolation: red(#ef4444) -> yellow(#facc15) -> green(#22c55e)
+    def lerp(a, b, t):
+        return int(a + (b - a) * t)
+    
+    if v < 0.5:
+        t = v / 0.5
+        r, g, b = lerp(239, 250, t), lerp(68, 204, t), lerp(68, 21, t)
+    else:
+        t = (v - 0.5) / 0.5
+        r, g, b = lerp(250, 34, t), lerp(204, 197, t), lerp(21, 94, t)
+    
+    text_color = '#0f172a' if v > 0.35 else '#ffffff'
+    return f'background-color: rgb({r},{g},{b}); color: {text_color}; font-weight:600;'
+
 def _status_badge_html(status: str) -> str:
     colors = {
         'Exact': ('#e8f5e9', '#1b5e20'),
@@ -4844,7 +4866,7 @@ def display_results(final_df: pd.DataFrame, stats: Dict):
         if 'MATCH_STATUS' in preview_df.columns:
             styler = styler.map(lambda v: _status_badge_html(v), subset=['MATCH_STATUS'])
         if 'CONFIDENCE' in preview_df.columns:
-            styler = styler.background_gradient(subset=['CONFIDENCE'], cmap='RdYlGn', vmin=0, vmax=1)
+            styler = styler.map(_confidence_color, subset=['CONFIDENCE'])
         
         st.dataframe(styler, use_container_width=True, hide_index=True, height=420)
     
@@ -5019,4 +5041,3 @@ if __name__ == "__main__":
         except Exception as e:
             st.error(f"❌ Application Error: {str(e)}")
             st.code(traceback.format_exc())
-
